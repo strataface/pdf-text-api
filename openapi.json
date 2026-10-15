@@ -1,0 +1,271 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PDF Text & Tables API",
+    "description": "Extract text and tables from PDFs, with optional OCR for scanned pages\n(Tesseract; languages: eng, deu, fra, spa, ita, por, chi_sim, jpn).\n\n* Only the URL you send is fetched (no crawling). Private/loopback addresses are refused.\n* **No file retention**: the PDF is held in memory for the request only and never written to disk\n  or logged; OCR scratch images are removed by the OCR wrapper right after each page.\n* Limits: 10 MB, 20 pages, 5 OCR pages,\n  ~60 s per request, 20 requests/min per client.\n",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/extract": {
+      "post": {
+        "summary": "Extract text/tables from a PDF URL",
+        "operationId": "extract_url_v1_extract_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/extract/upload": {
+      "post": {
+        "summary": "Extract text/tables from an uploaded PDF (multipart)",
+        "operationId": "extract_upload_v1_extract_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_extract_upload_v1_extract_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_extract_upload_v1_extract_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "PDF file"
+          },
+          "ocr": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "always",
+              "never"
+            ],
+            "title": "Ocr",
+            "default": "auto"
+          },
+          "ocrLanguages": {
+            "type": "string",
+            "title": "Ocrlanguages",
+            "default": "eng"
+          },
+          "tableFormat": {
+            "type": "string",
+            "enum": [
+              "none",
+              "csv",
+              "markdown",
+              "both"
+            ],
+            "title": "Tableformat",
+            "default": "none"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "maxPages": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Maxpages",
+            "default": 20
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_extract_upload_v1_extract_upload_post"
+      },
+      "ExtractRequest": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 2083,
+            "minLength": 1,
+            "format": "uri",
+            "title": "Url",
+            "description": "Public http(s) URL of a PDF."
+          },
+          "ocr": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "always",
+              "never"
+            ],
+            "title": "Ocr",
+            "description": "auto = OCR only pages without a text layer.",
+            "default": "auto"
+          },
+          "ocrLanguages": {
+            "type": "string",
+            "title": "Ocrlanguages",
+            "description": "Tesseract codes joined by '+', main language first, e.g. chi_sim+eng.",
+            "default": "eng"
+          },
+          "tableFormat": {
+            "type": "string",
+            "enum": [
+              "none",
+              "csv",
+              "markdown",
+              "both"
+            ],
+            "title": "Tableformat",
+            "default": "none"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password",
+            "description": "Password for encrypted PDFs (not logged)."
+          },
+          "maxPages": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Maxpages",
+            "default": 20
+          }
+        },
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "ExtractRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

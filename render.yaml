@@ -1,0 +1,12 @@
+# Render Blueprint (free plan). Needs a Git repo Render can read (connecting a repo = a push; not done).
+services:
+  - type: web
+    name: pdf-text-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: RAPIDAPI_PROXY_SECRET
+        sync: false
+      - key: PDFTEXT_TRUST_PROXY
+        value: "1"
